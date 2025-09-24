@@ -6,6 +6,8 @@ import registerSchema from "@/types/userSchema";
 import mongoose from "mongoose";
 import { NextRequest } from "next/server";
 import * as argon2 from "argon2";
+import { sendverificationCode, verifyCodeGenerater } from "@/helpers/mail";
+import { sendVerificationSms } from "@/helpers/sms";
 
 dbConnect();
 export async function POST(request: NextRequest) {
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     const validationData = {
       username,
       email,
-      phonenumber,  
+      phonenumber,
       password,
       role,
       profileImage: profileImage ? URL.createObjectURL(profileImage) : null,
@@ -35,18 +37,24 @@ export async function POST(request: NextRequest) {
       return errorResponse(validateResult.error.issues[0].message, 400);
     }
 
-    const [existingUser, ProfileImageData] = await Promise.all([
-      User.findOne({ email }).session(session),
-      profileImage && profileImage.size > 0
-        ? processImageUpload(profileImage, username)
-        : new Promise<null>(resolve => resolve(null)),
-    ]);
-
+    let existingUser = await User.findOne({ email }).session(session);
     if (existingUser) {
       await session.abortTransaction();
       return errorResponse("User already exists", 400);
     }
 
+    let existingPhonenumber = await User.findOne({ phonenumber }).session(
+      session
+    );
+    if (existingPhonenumber) {
+      await session.abortTransaction();
+      return errorResponse("Phone number already exists", 400);
+    }
+
+    let ProfileImageData = null;
+    if (profileImage && profileImage.size > 0) {
+      ProfileImageData = await processImageUpload(profileImage, username);
+    }
     const hashedPassword = await argon2.hash(password);
 
     const newUser = new User({
@@ -59,6 +67,18 @@ export async function POST(request: NextRequest) {
     });
 
     await newUser.save({ session });
+    const verificationCode = verifyCodeGenerater();
+    const emailsent = await sendverificationCode(
+      email,
+      username,
+      verificationCode
+    );
+    // const smssent = await sendVerificationSms(phonenumber, verificationCode);
+
+    if (!emailsent) {
+      await session.abortTransaction();
+      return errorResponse("Failed to send verification code", 500);
+    }
     await session.commitTransaction();
 
     const userResponse = {
