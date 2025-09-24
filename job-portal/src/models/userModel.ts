@@ -49,6 +49,16 @@ const UserSchema: Schema<IUser> = new mongoose.Schema({
         enum: ["recruiter", "candidate"],
         default: "candidate",
     },
+    verificationCode: {
+        type: String,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    isVerifiedExpiry: {
+        type: Date,
+    }
 }, { timestamps: true });
 
 const User: Model<IUser> =
