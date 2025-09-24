@@ -57,6 +57,9 @@ export async function POST(request: NextRequest) {
     }
     const hashedPassword = await argon2.hash(password);
 
+    const verificationCode = verifyCodeGenerater();
+    const expiryMinutes = 10;
+
     const newUser = new User({
       username,
       email,
@@ -64,21 +67,23 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
       role,
       profileImage: ProfileImageData,
+      verificationCode,
+      isVerifiedExpiry: new Date(Date.now() + expiryMinutes * 60 * 1000),
     });
 
     await newUser.save({ session });
-    const verificationCode = verifyCodeGenerater();
+
     const emailsent = await sendverificationCode(
       email,
       username,
       verificationCode
     );
-    // const smssent = await sendVerificationSms(phonenumber, verificationCode);
-
     if (!emailsent) {
       await session.abortTransaction();
       return errorResponse("Failed to send verification code", 500);
     }
+    // const smssent = await sendVerificationSms(phonenumber, verificationCode);
+    
     await session.commitTransaction();
 
     const userResponse = {

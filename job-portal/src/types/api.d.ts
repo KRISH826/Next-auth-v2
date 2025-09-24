@@ -8,7 +8,9 @@ export interface IUser extends Document {
     public_id: string | null;
     url: string;
   };
-  // isVerified: boolean;
+  isVerified: boolean;
+  isVerifiedExpiry?: Date;
+  verificationCode?: string;
   // forgotPasswordToken?: string;
   // forgotPasswordExpiry?: Date;
   // verifyToken?: string;
