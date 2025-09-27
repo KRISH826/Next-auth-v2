@@ -1,8 +1,11 @@
+import { dbConnect } from "@/db/db";
 import { errorResponse } from "@/helpers/apiResponse";
 import { verifyToken } from "@/helpers/jwt";
 import User from "@/models/userModel";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+
+dbConnect();
 
 
 export async function GET(request: NextRequest) {

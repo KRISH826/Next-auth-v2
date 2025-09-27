@@ -4,7 +4,10 @@ import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
 import * as argon2 from "argon2";
 import { generateToken, verifyToken } from "@/helpers/jwt";
+import { dbConnect } from "@/db/db";
 
+
+dbConnect();
 
 export async function POST(request: NextRequest) {
     const session = await mongoose.startSession();
@@ -65,10 +68,10 @@ export async function POST(request: NextRequest) {
 
 
     } catch (error) {
+        session.abortTransaction();
         if (error instanceof Error) {
             return errorResponse(error.message, 500);
         }
-        session.abortTransaction();
     } finally {
         session.endSession();
     }

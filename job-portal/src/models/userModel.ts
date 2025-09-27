@@ -58,8 +58,17 @@ const UserSchema: Schema<IUser> = new mongoose.Schema({
     },
     isVerifiedExpiry: {
         type: Date,
+    },
+    forgotPasswordToken: {
+        type: String,
+    },
+    forgotPasswordExpiry: {
+        type: Date,
     }
 }, { timestamps: true });
+
+UserSchema.index({ forgotPasswordExpiry: 1 }, { expireAfterSeconds: 0 });
+UserSchema.index({ isVerifiedExpiry: 1 }, { expireAfterSeconds: 0 });
 
 const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

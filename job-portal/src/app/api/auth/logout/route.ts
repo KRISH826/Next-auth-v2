@@ -1,6 +1,9 @@
+import { dbConnect } from "@/db/db";
 import { errorResponse } from "@/helpers/apiResponse";
 import mongoose from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+
+dbConnect();
 
 export async function GET(request: NextRequest) {
     const session = await mongoose.startSession();
